@@ -16,7 +16,7 @@ algoteams = {
     'MaGeZ': ['ALG1', 'ALG2', 'ALG3'],
     'SOS': ['SAGA_final2', 'SVRG_final'],
     'Tomo-Unimib': ['LP_final'],
-    'UCL-EWS': ['EWS-GD', 'EWS-SAGA', 'EWS-SGD']
+    'UCL-EWS': ['EWS_GD', 'EWS_SAGA', 'EWS_SGD']
 }
 
 base_path = Path('/opt/runner/logs')
