@@ -136,13 +136,61 @@ nemafig = show2D([v.__getitem__(phantoms[dphantom]['crop']) for k,v in algos.ite
 
 nemafig.save(f"{dphantom}.png")
 # %%
+no_xticks = []
+no_yticks = []
+for k,v in algos.items():
+    team, algo, scanner = k.split("/")
+    if (team, algo) == ("MaGeZ", "ALG1") or \
+        (team, algo) == ("SOS", "SAGA_final2") or \
+        (team, algo) == ("UCL-EWS", "EWS_GD"):
+        no_yticks.append(False)
+    else:
+        no_yticks.append(True)
+for k,v in algos.items():
+    team, algo, scanner = k.split("/")
+    if team == "UCL-EWS":
+        no_xticks.append(False)
+    else:
+        no_xticks.append(True)
+
 nemafig = show2D([(v - reference).__getitem__(phantoms[dphantom]['crop']) for k,v in algos.items()], 
     #    slice_list=(0,25), 
        num_cols=3,
        title = [k for k,v in algos.items()],
        origin="upper-left", 
-       cmap="seismic", fix_range=diff_range)
+       cmap="seismic", fix_range=diff_range,
+       no_xticks=no_xticks, no_yticks=no_yticks, no_colorbar=True)
 nemafig.save(f"{dphantom}_diff.png")
+
+
+#%%
+from matplotlib.gridspec import GridSpec
+fig, axs = plt.subplots(3, 3, figsize=(10, 10))
+# Remove all spacing between subplots
+plt.subplots_adjust(wspace=0, hspace=0)
+
+for kv, ax in zip(algos.items(), axs.flatten()):
+    k, v = kv
+    img = (v - reference).__getitem__(phantoms[dphantom]['crop'])
+    team, algo, scanner = k.split("/")
+    title = f"{team} {algo}"
+    cmap = "seismic"
+    vmin, vmax = diff_range
+    ax.imshow(img, cmap=cmap, vmin=vmin, vmax=vmax, label=title)
+    ax.annotate(title, xy=(3, 5), textcoords='data', ha='left', fontsize=10)
+    ax.set_xticklabels([])
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_yticklabels([])
+# Remove tight_layout as it overrides GridSpec spacing
+# fig.tight_layout()
+
+main_title = f"{dphantom} phantom on {scanner}"
+fig.suptitle(main_title, fontsize=16)
+plt.tight_layout()
+# Ensure no spacing and tight layout
+plt.show()
+
 # %%
 # calculate the statistics of the VOI
 
@@ -174,4 +222,24 @@ for k,v in algos.items():
     TV[k] = TotalVariation(max_iteration=1000)(a)
 
 print (f"TV for {dphantom} phantom: {TV}")
+# %%
+x = np.arange(0, 10, 0.1)
+y = np.sin(x)
+fig = plt.figure()
+gs = fig.add_gridspec(3, 3, hspace=0, wspace=0)
+(ax1, ax2) , (ax3, ax4) = gs.subplots(sharex='col', sharey='row')
+fig.suptitle('Sharing x per column, y per row')
+ax1.plot(x, y)
+ax2.plot(x, y**2, 'tab:orange')
+ax3.plot(x + 1, -y, 'tab:green')
+ax4.plot(x + 2, -y**2, 'tab:red')
+
+ax3.plot(x + 1, -y, 'tab:green')
+ax4.plot(x + 2, -y**2, 'tab:red')
+
+ax12.plot(x + 1, -y, 'tab:green')
+ax23.plot(x + 2, -y**2, 'tab:red')
+
+for ax in fig.get_axes():
+    ax.label_outer()
 # %%
