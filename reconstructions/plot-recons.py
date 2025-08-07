@@ -24,7 +24,11 @@ Tomo-Unimib/LP_final/Mediso_NEMA_lowcounts/iter_0007.v
 UCL-EWS/EWS_GD/Mediso_NEMA_lowcounts/iter_0008.v
 UCL-EWS/EWS_SAGA/Mediso_NEMA_lowcounts/iter_0072.v
 UCL-EWS/EWS_SGD/Mediso_NEMA_lowcounts/iter_0189.v""",
-                "diff_range": (-0.01, 0.01),
+                "diff_range": (-0.012, 0.012),
+                "diff_scale_max": 0.1,
+                # "diff_range": [(-0.005, 0.005),(-0.005, 0.005),(-0.005, 0.005),
+                #                (-0.05, 0.05),(-0.05, 0.05),(-0.15,0.15),
+                #                (-0.025, 0.025),(-0.025, 0.025),(-0.025, 0.025)],
                 "VOI" : [
                     {"fname": "VOI_2.v"},
                     {"fname": "VOI_3.v"},
@@ -47,7 +51,8 @@ Tomo-Unimib/LP_final/Vision600_Hoffman/iter_0033.v
 UCL-EWS/EWS_GD/Vision600_Hoffman/iter_0177.v
 UCL-EWS/EWS_SAGA/Vision600_Hoffman/iter_0337.v
 UCL-EWS/EWS_SGD/Vision600_Hoffman/iter_0453.v""",
-                "diff_range": (-0.1, 0.1),
+                "diff_range": (-0.05, 0.05),
+                "diff_scale_max": 0.1,
                 "VOI" : [
                     {"fname": "VOI_GM.v"},
                     {"fname": "VOI_ventricles.v"},
@@ -92,7 +97,6 @@ def get_phantom_data(phantom_name, phantoms):
 # %%
 # Mediso NEMA low counts
 dphantom = "NEMA"
-
 # dphantom = "Hoffman"
 
 algos, reference , VOIs, osem = get_phantom_data(dphantom, phantoms)
@@ -102,7 +106,7 @@ fig = show2D([el.__getitem__(phantoms[dphantom]['crop']) for el in [reference, o
        num_cols=3,
        title = ["reference","OSEM"],
        origin="upper-left", 
-       cmap="cubehelix_r", fix_range=True)
+       cmap="afmhot_r", fix_range=True)
 fig.save(f"{dphantom}_reference_osem.png")
 
 
@@ -116,6 +120,11 @@ ax.legend(prop={'size': 10})
 fig.suptitle(f"{dphantom}")
 fig.show()
 fig.savefig(f"{dphantom}_VOI_hist_reference_osem.png")
+
+# find range for the difference images as 10% of the max value in the reference image
+max_value = np.max(reference)
+diff_range = (-phantoms[dphantom]['diff_scale_max'] * max_value, 
+               phantoms[dphantom]['diff_scale_max'] * max_value)
 # %%
 
 nemafig = show2D([v.__getitem__(phantoms[dphantom]['crop']) for k,v in algos.items()], 
@@ -132,7 +141,7 @@ nemafig = show2D([(v - reference).__getitem__(phantoms[dphantom]['crop']) for k,
        num_cols=3,
        title = [k for k,v in algos.items()],
        origin="upper-left", 
-       cmap="seismic", fix_range=phantoms[dphantom]['diff_range'])
+       cmap="seismic", fix_range=diff_range)
 nemafig.save(f"{dphantom}_diff.png")
 # %%
 # calculate the statistics of the VOI
