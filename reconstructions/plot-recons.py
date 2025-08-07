@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 phantoms = {"NEMA": {
                 "shape": (75, 155, 155),
-                "crop": (25, slice(35, 115), slice(37, 117)),
+                "crop": (21, slice(35, 115), slice(37, 117)),
                 "reference": "reference_image.v",
                 "dirname": "/Users/edoardo.pasca/Documents/Papers/PETRIC/PETRIC-paper-data/NEMA",
                 "algos":  """MaGeZ/ALG1/Mediso_NEMA_lowcounts/iter_0064.v
@@ -29,7 +29,9 @@ UCL-EWS/EWS_SGD/Mediso_NEMA_lowcounts/iter_0189.v""",
                     {"fname": "VOI_2.v"},
                     {"fname": "VOI_3.v"},
                     {"fname": "VOI_4.v"},
-                ]},
+                ],
+                "OSEM": "OSEM_image.v",
+                },
 
             "Hoffman": {
                 "shape": (159, 169, 169),
@@ -50,7 +52,8 @@ UCL-EWS/EWS_SGD/Vision600_Hoffman/iter_0453.v""",
                     {"fname": "VOI_GM.v"},
                     {"fname": "VOI_ventricles.v"},
                     {"fname": "VOI_WM.v"},
-                ]
+                ],
+                "OSEM": "OSEM_image.v",
                 },
 }
 
@@ -75,6 +78,8 @@ def get_phantom_data(phantom_name, phantoms):
 
     fname = os.path.join(phantoms[phantom_name]['dirname'], phantoms[phantom_name]['reference'])
     reference = np.fromfile(fname, dtype=np.float32).reshape(shape)
+    fname = os.path.join(phantoms[phantom_name]['dirname'], phantoms[phantom_name]['OSEM'])
+    osem = np.fromfile(fname, dtype=np.float32).reshape(shape)
     
     voi_data = {}
     for voi in phantoms[phantom_name]['VOI']:
@@ -82,23 +87,35 @@ def get_phantom_data(phantom_name, phantoms):
         tmp = np.fromfile(fname, dtype=np.float32).reshape(shape)
         voi_data[voi['fname'].strip(".v")] = tmp.reshape(shape)
     
-    return ret, reference, voi_data
+    return ret, reference, voi_data, osem
 
 # %%
 # Mediso NEMA low counts
-# dphantom = "NEMA"
-dphantom = "Hoffman"
+dphantom = "NEMA"
 
-algos, reference , VOIs = get_phantom_data(dphantom, phantoms)
+# dphantom = "Hoffman"
+
+algos, reference , VOIs, osem = get_phantom_data(dphantom, phantoms)
 # NEMA_reference = np.fromfile(fname, dtype=np.float32).reshape(shape)
-show2D(reference.__getitem__(phantoms[dphantom]['crop']), 
+fig = show2D([el.__getitem__(phantoms[dphantom]['crop']) for el in [reference, osem]], 
     #    slice_list=(0,25), 
        num_cols=3,
-       title = "reference",
+       title = ["reference","OSEM"],
        origin="upper-left", 
        cmap="cubehelix_r", fix_range=True)
+fig.save(f"{dphantom}_reference_osem.png")
 
 
+fig, axs = plt.subplots(1, 3)
+labels = ["reference", "OSEM"]
+for ax, (kk, voi) in zip (fig.get_axes(), VOIs.items()):
+    for i,v in enumerate([reference, osem]):
+        ax.hist(v[voi > 0], bins=20, label=labels[i], alpha=1, histtype='step')
+        ax.set_title(kk)
+ax.legend(prop={'size': 10})
+fig.suptitle(f"{dphantom}")
+fig.show()
+fig.savefig(f"{dphantom}_VOI_hist_reference_osem.png")
 # %%
 
 nemafig = show2D([v.__getitem__(phantoms[dphantom]['crop']) for k,v in algos.items()], 
@@ -107,6 +124,8 @@ nemafig = show2D([v.__getitem__(phantoms[dphantom]['crop']) for k,v in algos.ite
        title = [k for k,v in algos.items()],
        origin="upper-left", 
        cmap="cubehelix_r", fix_range=True)
+
+nemafig.save(f"{dphantom}.png")
 # %%
 nemafig = show2D([(v - reference).__getitem__(phantoms[dphantom]['crop']) for k,v in algos.items()], 
     #    slice_list=(0,25), 
@@ -114,7 +133,7 @@ nemafig = show2D([(v - reference).__getitem__(phantoms[dphantom]['crop']) for k,
        title = [k for k,v in algos.items()],
        origin="upper-left", 
        cmap="seismic", fix_range=phantoms[dphantom]['diff_range'])
-
+nemafig.save(f"{dphantom}_diff.png")
 # %%
 # calculate the statistics of the VOI
 
@@ -125,4 +144,25 @@ for kk,voi in VOIs.items():
 ax.legend(prop={'size': 10})
 fig.suptitle(f"{dphantom}")
 fig.show()
+
+fig.savefig(f"{dphantom}_VOI_hist.png")
+# %%
+# evaluate the total variation of the reconstructions as proxy of smoothness
+
+
+from cil.optimisation.functions import TotalVariation
+from cil.framework import ImageGeometry, ImageData
+
+ig = ImageGeometry(voxel_num_x=phantoms[dphantom]['shape'][2],
+                   voxel_num_y=phantoms[dphantom]['shape'][1],
+                   voxel_num_z=phantoms[dphantom]['shape'][0])
+
+TV = {}
+for k,v in algos.items():
+    a = ig.allocate(None)
+    a.fill(v)
+    # a = ImageData(v, geometry=ig)
+    TV[k] = TotalVariation(max_iteration=1000)(a)
+
+print (f"TV for {dphantom} phantom: {TV}")
 # %%
