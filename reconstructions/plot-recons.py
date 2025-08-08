@@ -96,8 +96,8 @@ def get_phantom_data(phantom_name, phantoms):
 
 # %%
 # Mediso NEMA low counts
-dphantom = "NEMA"
-# dphantom = "Hoffman"
+# dphantom = "NEMA"
+dphantom = "Hoffman"
 
 algos, reference , VOIs, osem = get_phantom_data(dphantom, phantoms)
 # NEMA_reference = np.fromfile(fname, dtype=np.float32).reshape(shape)
@@ -159,15 +159,16 @@ nemafig = show2D([(v - reference).__getitem__(phantoms[dphantom]['crop']) for k,
        title = [k for k,v in algos.items()],
        origin="upper-left", 
        cmap="seismic", fix_range=diff_range,
-       no_xticks=no_xticks, no_yticks=no_yticks, no_colorbar=True)
+       no_xticks=no_xticks, no_yticks=no_yticks, no_colorbar=True,
+       facecolor='w')
 nemafig.save(f"{dphantom}_diff.png")
 
 
 #%%
 from matplotlib.gridspec import GridSpec
+
 fig, axs = plt.subplots(3, 3, figsize=(10, 10))
 # Remove all spacing between subplots
-plt.subplots_adjust(wspace=0, hspace=0)
 
 for kv, ax in zip(algos.items(), axs.flatten()):
     k, v = kv
@@ -176,21 +177,30 @@ for kv, ax in zip(algos.items(), axs.flatten()):
     title = f"{team} {algo}"
     cmap = "seismic"
     vmin, vmax = diff_range
-    ax.imshow(img, cmap=cmap, vmin=vmin, vmax=vmax, label=title)
+    sp = ax.imshow(img, cmap=cmap, vmin=vmin, vmax=vmax, label=title)
     ax.annotate(title, xy=(3, 5), textcoords='data', ha='left', fontsize=10)
     ax.set_xticklabels([])
     ax.set_xticks([])
     ax.set_yticks([])
     ax.set_yticklabels([])
+
+cax = plt.axes([0.915, 0.02, 0.02, 0.907])  # Adjust the position of the colorbar
+fig.colorbar(sp, orientation='vertical', 
+             use_gridspec=True,
+             cax=cax)
 # Remove tight_layout as it overrides GridSpec spacing
 # fig.tight_layout()
 
 main_title = f"{dphantom} phantom on {scanner}"
 fig.suptitle(main_title, fontsize=16)
-plt.tight_layout()
+# Remove tight_layout and use subplots_adjust to control spacing precisely
+plt.subplots_adjust(wspace=0.03, hspace=0.02, 
+                    left=0.02, right=0.91, 
+                    top=0.93, bottom=0.02)
 # Ensure no spacing and tight layout
+dfig = plt.gcf()
 plt.show()
-
+dfig.savefig(f"{dphantom}_diff.png")
 # %%
 # calculate the statistics of the VOI
 
