@@ -1,0 +1,1 @@
+{"AcquisitionModelUsingParallelproj_00": {"direct": [0.6126523331040516, 0.0, 10]}, "AcquisitionModelUsingParallelproj_01": {"direct": [0.6739413990871981, 0.0, 10]}, "PoissonLogLikelihoodWithLinearModelForMeanAndProjData_00": {"gradient": [1.0633366379188374, 0.0, 10]}, "PoissonLogLikelihoodWithLinearModelForMeanAndProjData_01": {"gradient": [1.1257814411073923, 0.0, 10]}}
