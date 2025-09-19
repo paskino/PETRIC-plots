@@ -28,7 +28,7 @@ def get_avg(data, key:str, which:str):
 
 # collate all results
 all_results = {}
-all_num_subsets = [1,3,7,14,21,42,63]
+all_num_subsets = [3,7,14,21,42,63]
 
 repetitions = 10
 for num_subsets in all_num_subsets:
@@ -83,32 +83,41 @@ import matplotlib.pyplot as plt
 x = all_results[21].keys()
 
 fig = plt.figure(figsize=(10,5))
-plot_list = ['direct', 'adjoint', 'gradient']
+plot_list = ['direct', 'adjoint', 'gradient', 'run']
+plot_fit = False
 # plot_list = ['adjoint']
-linear = False
+linear = True
 for c in plot_list:
     if linear:
-        x = all_num_subsets
+        x = [ 1/el for el in all_num_subsets[::-1] ]
+        plt.xlabel("1/Number of subsets")
+        
+        plt.xticks(ticks=x, 
+                   labels=[ f"{el}" for el in all_num_subsets[::-1] ],
+                   rotation=-45)
     else:
         x = np.arange(len(all_num_subsets))  # the label locations
 
         plt.xticks(ticks=x, 
-                   labels=[ f"{el} subsets" for el in all_num_subsets ])
-    y = all_resultsT[c][0] 
-    dy = all_resultsT[c][1]
-    ty = all_resultsT[c][0][0] / np.array(all_num_subsets)
+                   labels=[ f"{el}" for el in all_num_subsets ])
+    y = all_resultsT[c][0][::-1] 
+    dy = all_resultsT[c][1][::-1]
+    ty = all_resultsT[c][0][0] / np.array(all_num_subsets)[::-1]
+    m,q = np.polyfit(x, y, 1)
     plt.errorbar(x, 
                  y, 
                  yerr=dy, 
-                 label=c, color=f'C{plot_list.index(c)}')
-
+                 label=f"{c} {m:.2f} {q:.2f}", color=f'C{plot_list.index(c)}')
+    if plot_fit and linear and c in ['direct', 'adjoint', 'gradient']:
+        plt.plot(x, 
+                m*np.array(x)+q, 
+                linestyle='--', color=f'C{plot_list.index(c)}')
     
-    plt.scatter(x, 
-                ty, 
-            label=f"{c} theoretical", color=f'C{plot_list.index(c)}')
+    # plt.scatter(x, 
+    #             ty, 
+    #         label=f"{c} theoretical", color=f'C{plot_list.index(c)}')
 
-plt.ylabel("Delta Time (s)")
-plt.xlabel("Number of subsets")
+plt.ylabel("Time (s)")
 plt.grid(axis='both')
 plt.yscale('linear')
 plt.legend()# %%
