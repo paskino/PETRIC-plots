@@ -5,10 +5,7 @@ import numpy as np
 import pandas as pd
 
 num_subsets = 14
-repetitions = 10
-
-with open(f"time_breakdown_num_subsets{num_subsets}_rep{repetitions}.json", "r") as f:
-    time_breakdown = json.load(f)
+repetitions = 30
 
 #%%
 keys = ["AcquisitionModelUsingParallelproj",
@@ -26,17 +23,7 @@ def get_avg(data, key:str, which:str):
                     direct.append(subv)
     
     return direct
-# %%
 
-comb = [[keys[0],'direct'], [keys[0],'adjoint'],
-        [keys[1],'gradient'], [keys[2],'run']]
-
-for c in comb:
-    res = get_avg(time_breakdown,
-            c[0], c[1])
-    res = np.array(res)
-    np.mean(res, axis=0)
-    print (f"{c[1]}: {np.mean(res, axis=0)}")
 # %%
 
 # collate all results
@@ -63,8 +50,8 @@ for num_subsets in all_num_subsets:
         )
         
         # print (f"{c[1]}: {np.mean(res, axis=0)} {np.std(res, axis=0)}")
-    tmp = pd.DataFrame.from_dict(tmp, orient='index')
-    tmp.columns = ['mean', 'std']
+    # tmp = pd.DataFrame.from_dict(tmp, orient='index')
+    # tmp.columns = ['mean', 'std']
     all_results[num_subsets] = tmp
     # all_results.append(tmp)
 
@@ -76,12 +63,17 @@ all_resultsT = {}
 for c in comb:
     print (c[1])
     all_resultsT[c[1]] = {}
+    rows = []
     for num_subsets in all_num_subsets:
-        row = [ all_results[num_subsets]['mean'][c[1]], 
-               all_results[num_subsets]['std'][c[1]]]
-        df = pd.DataFrame(row).T
-        df.columns = ['mean', 'std']
-        all_resultsT[c[1]][num_subsets] = df
+        row = [ all_results[num_subsets][c[1]][0],
+                all_results[num_subsets][c[1]][1]]
+        
+        rows.append(row)
+
+        all_resultsT[c[1]] = np.array(rows).T
+        # df = pd.DataFrame(row).T
+        # df.columns = ['mean', 'std']
+        # all_resultsT[c[1]][num_subsets] = df
 
 
 #%%
@@ -91,36 +83,31 @@ import matplotlib.pyplot as plt
 x = all_results[21].keys()
 
 fig = plt.figure(figsize=(10,5))
-plot_list = ['direct']#, 'adjoint', 'gradient']
+plot_list = ['direct', 'adjoint', 'gradient']
+# plot_list = ['adjoint']
+linear = False
 for c in plot_list:
-    x = np.array(list(all_resultsT[c].keys()))
-    y = np.array(
-        [ all_resultsT[c][k]['mean'] for k in all_resultsT[c].keys()]
-    )
-    dy = np.array(
-        [ all_resultsT[c][k]['std'] for k in all_resultsT[c].keys()]
-    )
+    if linear:
+        x = all_num_subsets
+    else:
+        x = np.arange(len(all_num_subsets))  # the label locations
+
+        plt.xticks(ticks=x, 
+                   labels=[ f"{el} subsets" for el in all_num_subsets ])
+    y = all_resultsT[c][0] 
+    dy = all_resultsT[c][1]
+    ty = all_resultsT[c][0][0] / np.array(all_num_subsets)
     plt.errorbar(x, 
-                 y.T[0], 
-                 yerr=dy.T[0], 
+                 y, 
+                 yerr=dy, 
                  label=c, color=f'C{plot_list.index(c)}')
 
-    ty = [ all_resultsT[c][k]['mean'][0]/k for k in x ]
+    
     plt.scatter(x, 
                 ty, 
             label=f"{c} theoretical", color=f'C{plot_list.index(c)}')
-# plt.errorbar(x, all_results.T[0][1], yerr=all_results.T[1][1], label='adjoint', color='C1')
-# plt.scatter(x,[ all_results.T[0][1][0] / el for el in all_num_subsets], 
-#          label='adjoint theoretical', color='C1')
 
-# plt.errorbar(x, all_results.T[0][2], yerr=all_results.T[1][2], label='gradient', color='C2')
-# plt.scatter(x,[ all_results.T[0][2][0] / el for el in all_num_subsets], 
-#          label='gradient theoretical', color='C2')
-
-
-# plt.xticks(ticks=[x for x in range(len(all_num_subsets))], 
-#            labels=[ f"{el} subsets" for el in all_num_subsets ])
-plt.ylabel("Time (s)")
+plt.ylabel("Delta Time (s)")
 plt.xlabel("Number of subsets")
 plt.grid(axis='both')
 plt.yscale('linear')
