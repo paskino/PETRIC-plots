@@ -19,9 +19,9 @@ subsets = [21,42,63]
 dataset = ['mMR_NEMA_lowcounts']
 
 #%%
-data_dir = os.path.join(os.path.dirname(__file__), '..', 'PETRIC-SOS', 'data_read')
+data_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'PETRIC-SOS', 'data_read')
 # Open the file in read-binary mode
-with open(os.path.join(data_dir, 'allresults_lowcounts2.pkl'), 'rb') as file:
+with open(os.path.join(data_dir, 'allresults_lowcounts3.pkl'), 'rb') as file:
     # Deserialize the dictionary from the file
     loaded_dict = pickle.load(file)
 
@@ -122,9 +122,9 @@ def _plot_it(data, algs: list, num_subsets, which, dataset="mMR_NEMA", linecolor
     plt.show()
     
 #%%
-_linestyles = ['solid', 'dotted', 'dashed']
+_linestyles = ['solid', 'dotted', 'dashed', 'dashdot']
 _algos = algorithms
-subsets = [21,42,63]
+subsets = [1,21,42,63]
 
 def get_linestyles(subsets, algos=_algos, linestyles=_linestyles):
     ls = []
