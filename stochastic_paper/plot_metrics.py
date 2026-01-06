@@ -19,8 +19,9 @@ subsets = [21,42,63]
 dataset = ['mMR_NEMA_lowcounts']
 
 #%%
+data_dir = os.path.join(os.path.dirname(__file__), '..', 'PETRIC-SOS', 'data_read')
 # Open the file in read-binary mode
-with open('allresults_lowcounts2.pkl', 'rb') as file:
+with open(os.path.join(data_dir, 'allresults_lowcounts2.pkl'), 'rb') as file:
     # Deserialize the dictionary from the file
     loaded_dict = pickle.load(file)
 
@@ -66,20 +67,20 @@ def _plot_it(data, algs: list, num_subsets, which, dataset="mMR_NEMA", linecolor
                     x = [1,2,3,4,5] + x
                     y = algdata[which][:-1]
                     
-                elif alg in ['SVRG', 'LSVRG']:
-                    x = algdata['data_passes']
-                    # This failed regularly without the [1:]
-                    y = algdata[which][:-1]
-                    # print (f"{alg} {len(x)} {len(y)}")
-                elif alg == 'SG':
-                    x = algdata['data_passes']
-                    # This failed regularly without removing one from the data
-                    y = algdata[which][:-1]
-                    # print (f"{alg} {len(x)} {len(y)}")
                 # x = [el for el in range(len(y))]
-                xlabel = 'data passes'
+                xlabel = 'Data passes'
+
+            # select only the values within xlim
+            xx = x.copy()
+            yy = y.copy()
+            x = []
+            y = []
+            for i,el in enumerate(xx):
+                if el <= xlim[1] and el >= xlim[0]:
+                    x.append(el)
+                    y.append(yy[i])
             
-            #assert len(x) == len(y), f"{idx} {which}: len(x) != len(y) {len(x)}=!{len(y)} "
+            # take from x (and y) the values within xlim
             if len(x) == len(y):
                 ii = ns_idx + len(num_subsets) * alg_idx
                 if title is None:
@@ -98,9 +99,9 @@ def _plot_it(data, algs: list, num_subsets, which, dataset="mMR_NEMA", linecolor
     legend_size = 14
     if show_legend:
         if legend_loc is not None:
-            plt.legend(loc=legend_loc, prop={'size': legend_size}, ncol=2)
+            plt.legend(loc=legend_loc, prop={'size': legend_size}, ncol=1)
         else:
-            plt.legend(prop={'size': legend_size},ncol=2)
+            plt.legend(prop={'size': legend_size},ncol=1)
     plt.xlabel(xlabel)
     if xlim is not None:
         plt.xlim(xlim)
@@ -156,11 +157,11 @@ _plot_it(loaded_dict, _algos , subsets,
          linestyles=get_linestyles(subsets, algos),
          linecolors=get_linecolors(subsets, algos), 
          figsize=(9,7), yscale="log", xlim=(0,30),
-         legend_loc='upper right', savefig=savefig,
-        title=["SAGA-1 (N=21)", "SAGA-1 (N=42)", "SAGA-1 (N=63)",
-              "SAGA-SOS (N=21)", "SAGA-SOS (N=42)", "SAGA-SOS (N=63)"],
+         legend_loc='lower left', savefig=savefig,
+        title=["SAGA-1 (N=1)", "SAGA-1 (N=21)", "SAGA-1 (N=42)", "SAGA-1 (N=63)",
+              "SAGA-SOS (N=1)", "SAGA-SOS (N=21)", "SAGA-SOS (N=42)", "SAGA-SOS (N=63)"],
         ylabel="RMSE whole object",
-        additional_text=(2,2e-3,"A"))
+        additional_text=(25,3e-1,"A"))
 
 #%%
 _plot_it(loaded_dict, _algos, subsets, 
@@ -168,8 +169,8 @@ _plot_it(loaded_dict, _algos, subsets,
          linestyles=get_linestyles(subsets, algos),
          linecolors=get_linecolors(subsets, algos),  figsize=(9,7), yscale="log", xlim=(0,30),
          legend_loc='lower left', savefig=savefig, 
-        title=["SAGA-1 21 subsets", "SAGA-1 42 subsets", "SAGA-1 63 subsets",
-              "SAGA-SOS 21 subsets", "SAGA-SOS 42 subsets", "SAGA-SOS 63 subsets"],
+        title=["SAGA-1 1 subsets", "SAGA-1 21 subsets", "SAGA-1 42 subsets", "SAGA-1 63 subsets",
+              "SAGA-SOS 1 subsets", "SAGA-SOS 21 subsets", "SAGA-SOS 42 subsets", "SAGA-SOS 63 subsets"],
         ylabel="AEM sphere 1", show_legend=False,
-        additional_text=(2,3e-3,"B"))
+        additional_text=(25,7e-1,"B"))
 # %%
