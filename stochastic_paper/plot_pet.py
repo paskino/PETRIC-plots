@@ -6,6 +6,7 @@ import glob
 
 print (__file__, os.path.dirname(__file__))
 #%%
+data_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'PETRIC-SOS', 'data_read')
 os.chdir(os.path.dirname(__file__))
 from cil.utilities.display import show2D
 import matplotlib.pyplot as plt
@@ -36,7 +37,7 @@ crop = (71, slice(30, 150), slice(37, 190))
 for kv, ax in zip(data.items(), axs.flatten()):
     k, v = kv
     mask = whole_object.__getitem__(crop) > 0
-    img[~mask] = 0
+    # img[~mask] = 0
     v = v.__getitem__(crop)
     v[~mask] = 0
     ref = reference.__getitem__(crop)
@@ -88,16 +89,4 @@ dfig = plt.gcf()
 plt.show()
 dfig.savefig(f"PET_whole_volume_diff.png")
 # %%
-alg = "SAGA_63"
-md = np.load(alg + ".npy")
 
-show2D(md, slice_list=(0,71), fix_range=(0,0.05),
-       title=alg)
-# %%
-alg = "SOS-SAGAfinal2_63"
-show2D(data[alg], slice_list=(0,71), fix_range=(0,0.05),
-       title=alg)
-
-# %%
-show2D(reference, slice_list=(0, 71), fix_range=(0,0.05), title="Reference")
-# %%
